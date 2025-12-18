@@ -157,8 +157,8 @@
             const doc = parser.parseFromString(html, 'text/html');
             const tables = doc.querySelectorAll('table');
 
-            if(tables[2]) renderRanking(tables[2]);
-            if(tables[1]) renderKills(tables[1]);
+            if(tables[2]) renderRanking(tables[1]);
+            if(tables[1]) renderKills(tables[0]);
         } catch (e) { console.error("Datenfehler", e); }
     }
 
