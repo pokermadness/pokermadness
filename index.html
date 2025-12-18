@@ -66,7 +66,7 @@
             font-size: 14px; 
         }
 
-        /* --- HAUPTBEREICH --- */
+        /* --- CONTENT AREA --- */
         .container { width: 100%; max-width: 100%; margin: auto; padding: 10px; box-sizing: border-box; }
         header { padding: 20px 0 10px 0; border-bottom: 1px solid var(--border); }
         h1 { color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; font-size: 1.5rem; }
@@ -79,12 +79,6 @@
         th, td { padding: 12px 4px; border: 1px solid var(--border); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background: #2a2a2a; color: var(--gold); font-size: 0.7rem; text-transform: uppercase; }
         
-        /* Spaltenbreiten */
-        .col-platz { width: 15%; }
-        .col-spieler { width: 35%; }
-        .col-punkte { width: 20%; }
-        .col-tln { width: 30%; }
-
         .winner-highlight { background: rgba(0, 255, 212, 0.12) !important; color: var(--final-green) !important; font-weight: bold; }
 
         /* Kill-Liste Akkordeon */
@@ -118,10 +112,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th class="col-platz">Platz</th>
-                        <th class="col-spieler">Spieler</th>
-                        <th class="col-punkte">Pkt</th>
-                        <th class="col-tln">Tln</th>
+                        <th style="width:15%">Platz</th>
+                        <th>Spieler</th>
+                        <th style="width:25%">Punkte Gesamt</th>
+                        <th style="width:20%">Teilnahmen</th>
                     </tr>
                 </thead>
                 <tbody id="playerList">
@@ -179,134 +173,101 @@
 </div>
 
 <script>
-    // DEIN VERÖFFENTLICHTER LINK
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pubhtml";
 
     function checkLogin() {
-        const input = document.getElementById('passInput').value.toLowerCase();
-        if(input === "legendhand") {
+        if(document.getElementById('passInput').value.toLowerCase() === "legendhand") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
-            initStaticData(); // Lädt Archiv & Blind-Tabellen
-            loadGoogleData(); // Holt Live-Daten aus Sheets
-        } else {
-            alert("Passwort falsch!");
-        }
+            initStaticData();
+            loadGoogleData();
+        } else alert("Zugriff verweigert");
     }
 
     async function loadGoogleData() {
         try {
-            // Cache-Busting mit Zeitstempel
-            const response = await fetch(sheetURL + "?t=" + new Date().getTime());
+            const response = await fetch(sheetURL + "?t=" + Date.now());
             const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+            const doc = new DOMParser().parseFromString(html, 'text/html');
             const tables = Array.from(doc.querySelectorAll('table'));
 
-            let rankingTable = null;
-            let killTable = null;
+            let rankingTable, killTable;
 
-            // Suche die richtigen Tabellen anhand des Inhalts (basierend auf deinen Screenshots)
             tables.forEach(t => {
                 const text = t.innerText.toLowerCase();
-                // Rangliste: Sucht nach den Spaltenköpfen aus deinem Screenshot
-                if (text.includes("punkte gesamt") && text.includes("teilnahmen")) {
-                    rankingTable = t;
-                }
-                // KillMatrix: Sucht nach dem Eck-Feld "Kill/Opfer"
-                if (text.includes("kill/opfer")) {
-                    killTable = t;
-                }
+                if(text.includes("punkte gesamt") && text.includes("teilnahmen")) rankingTable = t;
+                if(text.includes("kill/opfer")) killTable = t;
             });
 
             if(rankingTable) renderRanking(rankingTable);
-            else document.getElementById('playerList').innerHTML = "<tr><td colspan='4'>Fehler: 'Rangliste' nicht gefunden.</td></tr>";
-
             if(killTable) renderKills(killTable);
-            else document.getElementById('killAccordion').innerText = "Fehler: 'KillMatrix' nicht gefunden.";
-
         } catch (e) {
-            console.error("Fetch Error:", e);
-            document.getElementById('playerList').innerHTML = "<tr><td colspan='4'>Verbindungsfehler zu Google.</td></tr>";
+            document.getElementById('playerList').innerHTML = "<tr><td colspan='4'>Fehler beim Laden.</td></tr>";
         }
     }
 
     function renderRanking(table) {
-        const rows = Array.from(table.querySelectorAll('tr')).slice(1); // Überspringe Header
+        const rows = Array.from(table.querySelectorAll('tr')).slice(1);
         const tbody = document.getElementById('playerList');
         tbody.innerHTML = "";
         
-        // Konvertiere in Array zum Sortieren (falls das Sheet nicht sortiert ist)
         const data = rows.map(r => {
-            const cols = r.querySelectorAll('td');
-            return {
-                name: cols[0].innerText.trim(),
-                pts: parseInt(cols[1].innerText) || 0,
-                tln: cols[2].innerText.trim()
+            const c = r.querySelectorAll('td');
+            if(c.length < 3) return null;
+            return { 
+                name: c[0].innerText.trim(), 
+                pts: parseInt(c[1].innerText) || 0, 
+                tln: c[2].innerText.trim() 
             };
-        }).filter(d => d.name !== "").sort((a,b) => b.pts - a.pts);
+        }).filter(d => d && d.name !== "" && d.name.toLowerCase() !== "spieler")
+          .sort((a,b) => b.pts - a.pts);
 
-        data.forEach((player, index) => {
-            const isTop = index < 5 ? "winner-highlight" : "";
-            tbody.innerHTML += `
-                <tr class="${isTop}">
-                    <td>${index + 1}</td>
-                    <td>${player.name}</td>
-                    <td>${player.pts}</td>
-                    <td>${player.tln}</td>
-                </tr>`;
+        data.forEach((d, i) => {
+            const style = i < 5 ? 'class="winner-highlight"' : '';
+            tbody.innerHTML += `<tr ${style}><td>${i+1}</td><td>${d.name}</td><td>${d.pts}</td><td>${d.tln}</td></tr>`;
         });
     }
 
     function renderKills(table) {
         const rows = Array.from(table.querySelectorAll('tr'));
-        const container = document.getElementById('killAccordion');
-        container.innerHTML = "";
-        
-        if(rows.length < 2) return;
-        
-        // Header (Opfer-Namen)
         const victims = Array.from(rows[0].querySelectorAll('td')).map(td => td.innerText.trim());
+        const dest = document.getElementById('killAccordion');
+        dest.innerHTML = "";
 
         for(let i = 1; i < rows.length; i++) {
             const cols = rows[i].querySelectorAll('td');
             const killer = cols[0].innerText.trim();
-            if(!killer || killer.toLowerCase() === "spieler") continue;
+            if(!killer || killer.toLowerCase() === "kill/opfer" || killer.toLowerCase() === "spieler") continue;
 
-            let killDetails = "";
-            let totalKills = 0;
-
+            let details = "";
+            let total = 0;
             for(let j = 1; j < cols.length; j++) {
-                const count = parseInt(cols[j].innerText) || 0;
-                if(count > 0) {
-                    killDetails += `<div class="victim-line"><span>${victims[j]}</span><span>${count}</span></div>`;
-                    totalKills += count;
+                const val = parseInt(cols[j].innerText) || 0;
+                if(val > 0) {
+                    details += `<div class="victim-line"><span>${victims[j]}</span><span>${val}</span></div>`;
+                    total += val;
                 }
             }
-
-            if(totalKills > 0) {
-                container.innerHTML += `
+            if(total > 0) {
+                dest.innerHTML += `
                     <div class="acc-row">
                         <div class="acc-header" onclick="toggleAcc('acc-${i}')">
-                            <span>${killer}</span>
-                            <span class="kill-total">${totalKills} Kills</span>
+                            <span>${killer}</span><span class="kill-total">${total} Kills</span>
                         </div>
-                        <div id="acc-${i}" class="acc-body">${killDetails}</div>
+                        <div id="acc-${i}" class="acc-body">${details}</div>
                     </div>`;
             }
         }
     }
 
     function initStaticData() {
-        // --- BLIND LEVEL ---
+        // --- BLINDS ---
         const blinds = [[1,"25/50","-",20],[2,"50/100","-",20],[3,"75/150","-",20],[4,"100/200","-",20],[5,"150/300","-",20],[6,"200/400","-",20],[7,"250/500","✓",20],[8,"300/600","✓",20],[9,"400/800","✓",20],["-","Pause","-","-"],[10,"500/1k","✓",20],[11,"600/1.2k","✓",20],[12,"800/1.6k","✓",20],[13,"1k/2k","✓",20],[14,"1.5k/3k","✓",20],[15,"2k/4k","✓",20],[16,"2.5k/5k","✓",20],[17,"3k/6k","✓",20],[18,"3.5k/7k","✓",20],[19,"4k/8k","✓",20]];
-        const bT = document.getElementById('blindTable');
-        bT.innerHTML = blinds.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+        document.getElementById('blindTable').innerHTML = blinds.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
 
         // --- PUNKTE & GELD ---
         const pD = [[1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],[2,5,6,7,8,9,10,11,12,13,14,15,16,17,18],[3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[4,1,2,3,4,5,6,7,8,9,10,11,12,13,14],[5,0,1,2,3,4,5,6,7,8,9,10,11,12,13],[6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],[7,"","",0,1,2,3,4,5,6,7,8,9,10,11],[8,"","","",0,1,2,3,4,5,6,7,8,9,10],[9,"","","","",0,1,2,3,4,5,6,7,8,9],[10,"","","","","",0,1,2,3,4,5,6,7,8],[11,"","","","","","",0,1,2,3,4,5,6,7],[12,"","","","","","","",0,1,2,3,4,5,6],[13,"","","","","","","","",0,1,2,3,4,5],[14,"","","","","","","","","",0,1,2,3,4],[15,"","","","","","","","","","",0,1,2,3],[16,"","","","","","","","","","","",0,1,2],[17,"","","","","","","","","","","","",0,1],[18,"","","","","","","","","","","","","",0]];
         const gD = [[1,150,150,170,200,220,250,250,260,270,280,290,300,310,320],[2,100,100,115,125,140,150,150,160,170,180,190,200,210,220],[3,"",50,65,75,90,100,100,115,130,145,160,175,190,205],[4,"","","","","","",50,65,80,95,110,125,140,155]];
-        
         document.getElementById('punkteTableBody').innerHTML = pD.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
         document.getElementById('geldTableBody').innerHTML = gD.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
@@ -325,28 +286,19 @@
             {j:2015,p:["Chris","Alex K.","Dawod","Samed","Markus"]},
             {j:2014,p:["Dawod","Markus","Hakan","Samed","Alex K."]}
         ];
-        const aDiv = document.getElementById('archiv-listen');
-        aDiv.innerHTML = arch.map(e => `
+        document.getElementById('archiv-listen').innerHTML = arch.map(e => `
             <h3>FINALE ${e.j}</h3>
-            <div class="table-container">
-                <table>
-                    ${e.p.map((p,i) => `<tr class="${i==0?'winner-highlight':''}"><td>${i+1}.</td><td>${p}</td></tr>`).join('')}
-                </table>
-            </div>
+            <div class="table-container"><table>${e.p.map((p,i)=>`<tr class="${i==0?'winner-highlight':''}"><td>${i+1}.</td><td>${p}</td></tr>`).join('')}</table></div>
         `).join('');
     }
 
     function toggleAcc(id) {
         const el = document.getElementById(id);
-        const current = el.style.display;
-        document.querySelectorAll('.acc-body').forEach(b => b.style.display = 'none');
-        el.style.display = (current === 'block') ? 'none' : 'block';
+        el.style.display = (el.style.display === "block") ? "none" : "block";
     }
 
     function toggleSection(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('hidden');
-        if(!el.classList.contains('hidden')) el.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById(id).classList.toggle('hidden');
     }
 </script>
 </body>
