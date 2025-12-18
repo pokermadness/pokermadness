@@ -114,85 +114,82 @@
 </div>
 
 <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pubhtml";
+    const csvRankingURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pub?gid=156592382&single=true&output=csv";
+    const csvKillsURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pub?gid=0&single=true&output=csv";
 
     function checkLogin() {
         if(document.getElementById('passInput').value.toLowerCase() === "legendhand") {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             initStaticData();
-            loadGoogleData();
+            loadCSVData();
         } else alert("Zugriff verweigert");
     }
 
-    async function loadGoogleData() {
+    async function loadCSVData() {
         try {
-            const res = await fetch(sheetURL + "?t=" + Date.now());
-            const html = await res.text();
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const tables = Array.from(doc.querySelectorAll('table'));
+            const resRank = await fetch(csvRankingURL + "&t=" + Date.now());
+            const textRank = await resRank.text();
+            renderRankingCSV(textRank);
 
-            let rankT, killT;
-            tables.forEach(t => {
-                const txt = t.innerText.toLowerCase();
-                if(txt.includes("spieler") && txt.includes("punkte") && txt.includes("teilnahmen")) rankT = t;
-                if(txt.includes("kill/opfer")) killT = t;
-            });
-
-            if(rankT) renderRanking(rankT);
-            if(killT) renderKills(killT);
+            const resKills = await fetch(csvKillsURL + "&t=" + Date.now());
+            const textKills = await resKills.text();
+            renderKillsCSV(textKills);
         } catch (e) {
-            document.getElementById('playerList').innerHTML = "<tr><td colspan='4'>Fehler beim Laden der Live-Daten.</td></tr>";
+            document.getElementById('playerList').innerHTML = "<tr><td colspan='4'>Fehler beim Laden.</td></tr>";
         }
     }
 
-    function renderRanking(table) {
-        const rows = Array.from(table.querySelectorAll('tr')).slice(1);
+    function renderRankingCSV(csv) {
+        const lines = csv.split('\n').map(line => line.split(','));
         const dest = document.getElementById('playerList');
         dest.innerHTML = "";
         
-        const data = rows.map(r => {
-            const c = r.querySelectorAll('td');
-            if(c.length < 3) return null;
-            return {
-                n: c[0].innerText.trim(),
-                p: parseInt(c[1].innerText) || 0,
-                t: c[2].innerText.trim()
-            };
-        }).filter(d => d && d.n !== "" && d.n.toLowerCase() !== "spieler")
-          .sort((a,b) => b.p - a.p);
+        let data = [];
+        // Start bei Zeile 1, um Header zu überspringen
+        for(let i = 1; i < lines.length; i++) {
+            const row = lines[i];
+            if(row.length < 3 || !row[0]) continue;
+            data.push({
+                n: row[0].replace(/"/g,'').trim(),
+                p: parseInt(row[1]) || 0,
+                t: row[2].replace(/"/g,'').trim()
+            });
+        }
 
-        data.forEach((d, i) => {
+        data.sort((a,b) => b.p - a.p).forEach((d, i) => {
             const style = i < 5 ? 'class="winner-highlight"' : '';
             dest.innerHTML += `<tr ${style}><td>${i+1}</td><td>${d.n}</td><td>${d.p}</td><td>${d.t}</td></tr>`;
         });
     }
 
-    function renderKills(table) {
-        const rows = Array.from(table.querySelectorAll('tr'));
-        const victims = Array.from(rows[0].querySelectorAll('td')).map(td => td.innerText.trim());
+    function renderKillsCSV(csv) {
+        const lines = csv.split('\n').map(line => line.split(','));
+        if(lines.length < 1) return;
+        
+        const victims = lines[0].map(v => v.replace(/"/g,'').trim());
         const dest = document.getElementById('killAccordion');
         dest.innerHTML = "";
 
-        for(let i = 1; i < rows.length; i++) {
-            const cols = rows[i].querySelectorAll('td');
-            const killer = cols[0].innerText.trim();
-            if(!killer || killer.toLowerCase() === "kill/opfer" || killer.toLowerCase() === "spieler") continue;
+        for(let i = 1; i < lines.length; i++) {
+            const row = lines[i];
+            const killer = row[0] ? row[0].replace(/"/g,'').trim() : "";
+            if(!killer || killer.toLowerCase() === "spieler" || killer.toLowerCase() === "kill/opfer") continue;
 
             let details = "";
-            let total = 0;
-            for(let j = 1; j < cols.length; j++) {
-                const val = parseInt(cols[j].innerText) || 0;
-                if(val > 0) {
+            let sum = 0;
+            for(let j = 1; j < row.length; j++) {
+                const val = parseInt(row[j]) || 0;
+                if(val > 0 && victims[j]) {
                     details += `<div class="victim-line"><span>${victims[j]}</span><span>${val}</span></div>`;
-                    total += val;
+                    sum += val;
                 }
             }
-            if(total > 0) {
+            if(sum > 0) {
                 dest.innerHTML += `
                 <div class="acc-row">
                     <div class="acc-header" onclick="toggleAcc('k-${i}')">
-                        <span>${killer}</span><span class="kill-total">${total} Kills</span>
+                        <span>${killer}</span><span class="kill-total">${sum} Kills</span>
                     </div>
                     <div id="k-${i}" class="acc-body">${details}</div>
                 </div>`;
@@ -201,19 +198,15 @@
     }
 
     function initStaticData() {
-        // Blinds
-        const b = [[1,"25/50","-",20],[2,"50/100","-",20],[3,"75/150","-",20],[4,"100/200","-",20],[5,"150/300","-",20],[6,"200/400","-",20],[7,"250/500","✓",20],[8,"300/600","✓",20],[9,"400/800","✓",20],["-","Pause","-","-"],[10,"500/1k","✓",20],[11,"600/1.2k","✓",20],[12,"800/1.6k","✓",20],[13,"1k/2k","✓",20],[14,"1.5k/3k","✓",20],[15,"2k/4k","✓",20],[16,"2.5k/5k","✓",20],[17,"3k/6k","✓",20],[18,"3.5k/7k","✓",20],[19,"4k/8k","✓",20]];
-        document.getElementById('blindTable').innerHTML = "<thead><tr><th>Lvl</th><th>Blinds</th><th>Ante</th><th>Min</th></tr></thead>" + b.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
+        const bl = [[1,"25/50","-",20],[2,"50/100","-",20],[3,"75/150","-",20],[4,"100/200","-",20],[5,"150/300","-",20],[6,"200/400","-",20],[7,"250/500","✓",20],[8,"300/600","✓",20],[9,"400/800","✓",20],["-","Pause","-","-"],[10,"500/1k","✓",20],[11,"600/1.2k","✓",20],[12,"800/1.6k","✓",20],[13,"1k/2k","✓",20],[14,"1.5k/3k","✓",20],[15,"2k/4k","✓",20],[16,"2.5k/5k","✓",20],[17,"3k/6k","✓",20],[18,"3.5k/7k","✓",20],[19,"4k/8k","✓",20]];
+        document.getElementById('blindTable').innerHTML = "<thead><tr><th>Lvl</th><th>Blinds</th><th>Ante</th><th>Min</th></tr></thead>" + bl.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
 
-        // Punkte Referenz (Vollständig 1-18)
         const pr = [[1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],[2,5,6,7,8,9,10,11,12,13,14,15,16,17,18],[3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[4,1,2,3,4,5,6,7,8,9,10,11,12,13,14],[5,0,1,2,3,4,5,6,7,8,9,10,11,12,13],[6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],[7,"","",0,1,2,3,4,5,6,7,8,9,10,11],[8,"","","",0,1,2,3,4,5,6,7,8,9,10],[9,"","","","",0,1,2,3,4,5,6,7,8,9],[10,"","","","","",0,1,2,3,4,5,6,7,8],[11,"","","","","","",0,1,2,3,4,5,6,7],[12,"","","","","","","",0,1,2,3,4,5,6],[13,"","","","","","","","",0,1,2,3,4,5],[14,"","","","","","","","","",0,1,2,3,4],[15,"","","","","","","","","","",0,1,2,3],[16,"","","","","","","","","","","",0,1,2],[17,"","","","","","","","","","","","",0,1],[18,"","","","","","","","","","","","","",0]];
         document.getElementById('fullRefTable').innerHTML = "<thead><tr><th>Platz</th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pr.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
-        // Auszahlungstabelle
         const pay = [[1,150,150,170,200,220,250,250,260,270,280,290,300,310,320],[2,100,100,115,125,140,150,150,160,170,180,190,200,210,220],[3,"",50,65,75,90,100,100,115,130,145,160,175,190,205],[4,"","","","","","",50,65,80,95,110,125,140,155]];
         document.getElementById('payoutTable').innerHTML = "<thead><tr><th>Platz</th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pay.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
-        // Archiv (Vollständig 2014-2025)
         const arch = [
             {j:2025,p:["Samed","Rocco","Michel","Gabriel","Dennis"]},
             {j:2024,p:["Michel","Chris","Rocco","Puje","Alex K."]},
