@@ -86,7 +86,7 @@
                         <th class="col-platz">Platz</th>
                         <th class="col-spieler">Spieler</th>
                         <th class="col-punkte">Punkte</th>
-                        <th class="col-tln">Teilnehmer</th>
+                        <th class="col-tln">Teilnahmen</th>
                     </tr>
                 </thead>
                 <tbody id="playerList">
@@ -107,7 +107,7 @@
             <h2>PUNKTEVERTEILUNG</h2>
             <div class="table-container scroll-table">
                 <table style="table-layout: auto; min-width: 650px;">
-                    <thead><tr><th>Platz</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
+                    <thead><tr><th></th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
                     <tbody id="punkteTableBody"></tbody>
                 </table>
             </div>
@@ -115,7 +115,7 @@
             <h2>AUSZAHLUNG</h2>
             <div class="table-container scroll-table">
                 <table style="table-layout: auto; min-width: 650px;">
-                    <thead><tr><th>Platz</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
+                    <thead><tr><th></th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
                     <tbody id="geldTableBody"></tbody>
                 </table>
             </div>
@@ -213,7 +213,6 @@
     }
 
     function initStaticData() {
-        // --- Punkteverteilung VOLLSTÄNDIG (1-18) ---
         const pT = document.getElementById('punkteTableBody');
         const pD = [
             [1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
@@ -237,7 +236,6 @@
         ];
         pD.forEach(r => pT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
 
-        // --- Auszahlung VOLLSTÄNDIG ---
         const gT = document.getElementById('geldTableBody');
         const gD = [
             [1,150,150,170,200,220,250,250,260,270,280,290,300,310,320], 
@@ -247,7 +245,6 @@
         ];
         gD.forEach(r => gT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
 
-        // --- Blind-Level VOLLSTÄNDIG (1-19) ---
         const bT = document.getElementById('blindTable');
         const bD = [
             [1,"25/50","X",20],[2,"50/100","X",20],[3,"75/150","X",20],[4,"100/200","X",20],
@@ -258,7 +255,6 @@
         ];
         bD.forEach(r => bT.innerHTML += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`);
 
-        // --- Archiv VOLLSTÄNDIG ---
         const archivDaten = [
             { jahr: 2025, plätze: ["Samed", "Rocco", "Michel", "Gabriel", "Dennis"] },
             { jahr: 2024, plätze: ["Michel", "Chris", "Rocco", "Puje", "Alex K."] },
