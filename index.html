@@ -138,7 +138,7 @@
 </div>
 
 <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pubhtml";
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSnObu58QPqRmgCvhd8G4wbXt1M2c8YXtfxoGXN01bsMzVRzXlUJmxAEXUy_jyeGdQCxavuNP2KzB5/pub?output=csv";
 
     function checkLogin() {
         if(document.getElementById('passInput').value.toLowerCase() === "legendhand") {
@@ -157,8 +157,8 @@
             const doc = parser.parseFromString(html, 'text/html');
             const tables = doc.querySelectorAll('table');
 
-            if(tables[2]) renderRanking(tables[1]);
-            if(tables[1]) renderKills(tables[0]);
+            if(tables[2]) renderRanking(tables[2]);
+            if(tables[1]) renderKills(tables[1]);
         } catch (e) { console.error("Datenfehler", e); }
     }
 
