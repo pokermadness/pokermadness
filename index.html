@@ -20,7 +20,7 @@
 
         .hidden { display: none !important; }
 
-        /* Login Screen mit Abstand */
+        /* Login Screen */
         #login-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
         #login-screen h1 { margin-bottom: 60px; color: var(--gold); letter-spacing: 4px; text-transform: uppercase; }
         
@@ -38,9 +38,8 @@
         
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th, td { padding: 12px 5px; border: 1px solid var(--border); text-align: center; }
-        th { background: #2a2a2a; color: var(--gold); font-size: 0.75rem; text-transform: uppercase; }
+        th { background: #2a2a2a; color: var(--gold); font-size: 0.9rem; text-transform: uppercase; font-weight: bold; }
         
-        /* Farbkennzeichnung Rangliste */
         .winner-highlight { background: rgba(0, 255, 212, 0.15) !important; color: var(--final-green) !important; font-weight: bold; }
 
         /* Kill-Akkordeon */
@@ -146,27 +145,38 @@
         dest.innerHTML = "";
         
         let data = [];
-        // Start bei Zeile 1, um Header zu überspringen
         for(let i = 1; i < lines.length; i++) {
             const row = lines[i];
             if(row.length < 3 || !row[0]) continue;
             data.push({
                 n: row[0].replace(/"/g,'').trim(),
                 p: parseInt(row[1]) || 0,
-                t: row[2].replace(/"/g,'').trim()
+                t: parseInt(row[2].replace(/"/g,'')) || 0
             });
         }
 
-        data.sort((a,b) => b.p - a.p).forEach((d, i) => {
-            const style = i < 5 ? 'class="winner-highlight"' : '';
-            dest.innerHTML += `<tr ${style}><td>${i+1}</td><td>${d.n}</td><td>${d.p}</td><td>${d.t}</td></tr>`;
+        // NEUE SORTIER-LOGIK:
+        // 1. Meiste Punkte (b.p - a.p)
+        // 2. Wenn Punkte gleich: Weniger Teilnahmen (a.t - b.t)
+        data.sort((a,b) => {
+            if (b.p !== a.p) return b.p - a.p;
+            return a.t - b.t;
+        });
+
+        let currentRank = 0;
+        data.forEach((d, i) => {
+            // Platz teilen nur wenn Punkte UND Teilnahmen exakt gleich sind
+            if (i === 0 || d.p !== data[i-1].p || d.t !== data[i-1].t) {
+                currentRank = i + 1;
+            }
+            const style = currentRank <= 5 ? 'class="winner-highlight"' : '';
+            dest.innerHTML += `<tr ${style}><td>${currentRank}.</td><td>${d.n}</td><td>${d.p}</td><td>${d.t}</td></tr>`;
         });
     }
 
     function renderKillsCSV(csv) {
         const lines = csv.split('\n').map(line => line.split(','));
         if(lines.length < 1) return;
-        
         const victims = lines[0].map(v => v.replace(/"/g,'').trim());
         const dest = document.getElementById('killAccordion');
         dest.innerHTML = "";
@@ -175,9 +185,7 @@
             const row = lines[i];
             const killer = row[0] ? row[0].replace(/"/g,'').trim() : "";
             if(!killer || killer.toLowerCase() === "spieler" || killer.toLowerCase() === "kill/opfer") continue;
-
-            let details = "";
-            let sum = 0;
+            let details = ""; let sum = 0;
             for(let j = 1; j < row.length; j++) {
                 const val = parseInt(row[j]) || 0;
                 if(val > 0 && victims[j]) {
@@ -186,13 +194,7 @@
                 }
             }
             if(sum > 0) {
-                dest.innerHTML += `
-                <div class="acc-row">
-                    <div class="acc-header" onclick="toggleAcc('k-${i}')">
-                        <span>${killer}</span><span class="kill-total">${sum} Kills</span>
-                    </div>
-                    <div id="k-${i}" class="acc-body">${details}</div>
-                </div>`;
+                dest.innerHTML += `<div class="acc-row"><div class="acc-header" onclick="toggleAcc('k-${i}')"><span>${killer}</span><span class="kill-total">${sum} Kills</span></div><div id="k-${i}" class="acc-body">${details}</div></div>`;
             }
         }
     }
@@ -202,29 +204,13 @@
         document.getElementById('blindTable').innerHTML = "<thead><tr><th>Lvl</th><th>Blinds</th><th>Ante</th><th>Min</th></tr></thead>" + bl.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
 
         const pr = [[1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],[2,5,6,7,8,9,10,11,12,13,14,15,16,17,18],[3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[4,1,2,3,4,5,6,7,8,9,10,11,12,13,14],[5,0,1,2,3,4,5,6,7,8,9,10,11,12,13],[6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],[7,"","",0,1,2,3,4,5,6,7,8,9,10,11],[8,"","","",0,1,2,3,4,5,6,7,8,9,10],[9,"","","","",0,1,2,3,4,5,6,7,8,9],[10,"","","","","",0,1,2,3,4,5,6,7,8],[11,"","","","","","",0,1,2,3,4,5,6,7],[12,"","","","","","","",0,1,2,3,4,5,6],[13,"","","","","","","","",0,1,2,3,4,5],[14,"","","","","","","","","",0,1,2,3,4],[15,"","","","","","","","","","",0,1,2,3],[16,"","","","","","","","","","","",0,1,2],[17,"","","","","","","","","","","","",0,1],[18,"","","","","","","","","","","","","",0]];
-        document.getElementById('fullRefTable').innerHTML = "<thead><tr><th>Platz</th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pr.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+        document.getElementById('fullRefTable').innerHTML = "<thead><tr><th></th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pr.map(r => `<tr><td><b>${r[0]}</b></td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
         const pay = [[1,150,150,170,200,220,250,250,260,270,280,290,300,310,320],[2,100,100,115,125,140,150,150,160,170,180,190,200,210,220],[3,"",50,65,75,90,100,100,115,130,145,160,175,190,205],[4,"","","","","","",50,65,80,95,110,125,140,155]];
-        document.getElementById('payoutTable').innerHTML = "<thead><tr><th>Platz</th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pay.map(r => `<tr><td>${r[0]}</td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+        document.getElementById('payoutTable').innerHTML = "<thead><tr><th></th>" + Array.from({length:14},(_,i)=>`<th>${i+5}</th>`).join('') + "</tr></thead>" + pay.map(r => `<tr><td><b>${r[0]}</b></td>${r.slice(1).map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
 
-        const arch = [
-            {j:2025,p:["Samed","Rocco","Michel","Gabriel","Dennis"]},
-            {j:2024,p:["Michel","Chris","Rocco","Puje","Alex K."]},
-            {j:2023,p:["Rocco","Michel","Alex K.","Chris","Samed"]},
-            {j:2022,p:["Dawod","Samed","Chris","Alex A.","Magnus"]},
-            {j:2021,p:["Markus","Magnus","Samed","Chris","Dawod"]},
-            {j:2020,p:["Markus","Samed","Michel","Magnus","Dawod"]},
-            {j:2019,p:["Markus","Chris","Samed","Dawod","Alex K."]},
-            {j:2018,p:["Dawod","Markus","Michel","Chris","Samed"]},
-            {j:2017,p:["Markus","Alex A.","Dawod","Samed","Alex K."]},
-            {j:2016,p:["Chris","Samed","Dawod","Alex K.","Markus"]},
-            {j:2015,p:["Chris","Alex K.","Dawod","Samed","Markus"]},
-            {j:2014,p:["Dawod","Markus","Hakan","Samed","Alex K."]}
-        ];
-        document.getElementById('archiv-listen').innerHTML = arch.map(e => `
-            <h3>FINALE ${e.j}</h3>
-            <div class="table-container"><table>${e.p.map((p,i)=>`<tr class="${i==0?'winner-highlight':''}"><td>${i+1}.</td><td>${p}</td></tr>`).join('')}</table></div>
-        `).join('');
+        const arch = [{j:2025,p:["Samed","Rocco","Michel","Gabriel","Dennis"]},{j:2024,p:["Michel","Chris","Rocco","Puje","Alex K."]} ,{j:2023,p:["Rocco","Michel","Alex K.","Chris","Samed"]},{j:2022,p:["Dawod","Samed","Chris","Alex A.","Magnus"]},{j:2021,p:["Markus","Magnus","Samed","Chris","Dawod"]},{j:2020,p:["Markus","Samed","Michel","Magnus","Dawod"]},{j:2019,p:["Markus","Chris","Samed","Dawod","Alex K."]} ,{j:2018,p:["Dawod","Markus","Michel","Chris","Samed"]},{j:2017,p:["Markus","Alex A.","Dawod","Samed","Alex K."]} ,{j:2016,p:["Chris","Samed","Dawod","Alex K.","Markus"]},{j:2015,p:["Chris","Alex K.","Dawod","Samed","Markus"]},{j:2014,p:["Dawod","Markus","Hakan","Samed","Alex K."]}];
+        document.getElementById('archiv-listen').innerHTML = arch.map(e => `<h3>FINALE ${e.j}</h3><div class="table-container"><table>${e.p.map((p,i)=>`<tr class="${i==0?'winner-highlight':''}"><td>${i+1}.</td><td>${p}</td></tr>`).join('')}</table></div>`).join('');
     }
 
     function toggleAcc(id) {
