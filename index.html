@@ -34,7 +34,7 @@
         h1 { color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin: 0; font-size: 1.5rem; }
         h2 { color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 10px; margin: 30px 0 10px 0; text-transform: uppercase; font-size: 1rem; }
 
-        /* Tabellen Styling - Überall zentriert */
+        /* Tabellen Styling - Alles Zentriert */
         .table-container { background: var(--card-bg); border-radius: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #333; }
         .scroll-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         
@@ -42,7 +42,7 @@
         th, td { padding: 12px 4px; border: 1px solid #333; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         th { background: #2a2a2a; color: var(--gold); font-size: 0.7rem; text-transform: uppercase; }
         
-        /* Spaltenbreiten Rangliste fixiert */
+        /* Spaltenbreiten Rangliste */
         .col-platz { width: 15%; }
         .col-spieler { width: 35%; }
         .col-punkte { width: 20%; }
@@ -213,18 +213,31 @@
     }
 
     function initStaticData() {
-        // Punkteverteilung vervollständigt
+        // --- Punkteverteilung VOLLSTÄNDIG (1-18) ---
         const pT = document.getElementById('punkteTableBody');
         const pD = [
-            [1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],[2,5,6,7,8,9,10,11,12,13,14,15,16,17,18],
-            [3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],[4,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
-            [5,0,1,2,3,4,5,6,7,8,9,10,11,12,13],[6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],
-            [7,"","",0,1,2,3,4,5,6,7,8,9,10,11],[8,"","","",0,1,2,3,4,5,6,7,8,9,10],
-            [9,"","","","",0,1,2,3,4,5,6,7,8,9],[10,"","","","","",0,1,2,3,4,5,6,7,8]
+            [1,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
+            [2,5,6,7,8,9,10,11,12,13,14,15,16,17,18],
+            [3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            [4,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
+            [5,0,1,2,3,4,5,6,7,8,9,10,11,12,13],
+            [6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],
+            [7,"","",0,1,2,3,4,5,6,7,8,9,10,11],
+            [8,"","","",0,1,2,3,4,5,6,7,8,9,10],
+            [9,"","","","",0,1,2,3,4,5,6,7,8,9],
+            [10,"","","","","",0,1,2,3,4,5,6,7,8],
+            [11,"","","","","","",0,1,2,3,4,5,6,7],
+            [12,"","","","","","","",0,1,2,3,4,5,6],
+            [13,"","","","","","","","",0,1,2,3,4,5],
+            [14,"","","","","","","","","",0,1,2,3,4],
+            [15,"","","","","","","","","","",0,1,2,3],
+            [16,"","","","","","","","","","","",0,1,2],
+            [17,"","","","","","","","","","","","",0,1],
+            [18,"","","","","","","","","","","","","",0]
         ];
         pD.forEach(r => pT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
 
-        // Auszahlung vervollständigt
+        // --- Auszahlung VOLLSTÄNDIG ---
         const gT = document.getElementById('geldTableBody');
         const gD = [
             [1,150,150,170,200,220,250,250,260,270,280,290,300,310,320], 
@@ -234,17 +247,18 @@
         ];
         gD.forEach(r => gT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
 
-        // Blinds vervollständigt
+        // --- Blind-Level VOLLSTÄNDIG (1-19) ---
         const bT = document.getElementById('blindTable');
         const bD = [
             [1,"25/50","X",20],[2,"50/100","X",20],[3,"75/150","X",20],[4,"100/200","X",20],
             [5,"150/300","X",20],[6,"200/400","X",20],[7,"250/500","✓",20],[8,"300/600","✓",20],
             [9,"400/800","✓",20],["-","Ende","-","-"],[10,"500/1k","✓",20],[11,"600/1.2k","✓",20],
-            [12,"800/1.6k","✓",20],[13,"1k/2k","✓",20],[14,"1.5k/3k","✓",20]
+            [12,"800/1.6k","✓",20],[13,"1k/2k","✓",20],[14,"1.5k/3k","✓",20],[15,"2k/4k","✓",20],
+            [16,"2.5k/5k","✓",20],[17,"3k/6k","✓",20],[18,"3.5k/7k","✓",20],[19,"4k/8k","✓",20]
         ];
         bD.forEach(r => bT.innerHTML += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`);
 
-        // Archiv vervollständigt
+        // --- Archiv VOLLSTÄNDIG ---
         const archivDaten = [
             { jahr: 2025, plätze: ["Samed", "Rocco", "Michel", "Gabriel", "Dennis"] },
             { jahr: 2024, plätze: ["Michel", "Chris", "Rocco", "Puje", "Alex K."] },
