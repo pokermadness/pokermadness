@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokermadness</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --final-green: #00ffd4;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            text-align: center; 
+            margin: 0; 
+            padding-bottom: 50px;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* --- LOGIN --- */
+        #login-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #login-screen h1 { margin-bottom: 60px; letter-spacing: 4px; }
+        input { padding: 15px; border-radius: 8px; border: 1px solid var(--gold); background: #222; color: white; margin-bottom: 15px; width: 260px; font-size: 16px; }
+        button { padding: 15px 40px; background: var(--gold); border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; color: black; width: 100%; max-width: 300px; margin: 10px auto; }
+
+        /* --- CONTENT --- */
+        .container { max-width: 600px; margin: auto; padding: 15px; }
+        header { padding: 20px 0 0 0; border-bottom: 1px solid #333; }
+        h1 { color: var(--gold); letter-spacing: 4px; text-transform: uppercase; margin: 0; }
+        h2 { color: var(--gold); border-bottom: 1px solid #333; padding-bottom: 10px; margin: 5px 0 0 0; text-transform: uppercase; font-size: 1.1rem; }
+
+        /* Abstand zwischen Rangliste und Kill-Liste */
+        #kill-section-title { margin-top: 40px; }
+
+        /* Tabellen */
+        .table-container { background: var(--card-bg); border-radius: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #333; }
+        .scroll-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; min-width: 550px; }
+        th, td { padding: 8px 4px; border: 1px solid #333; text-align: center; }
+        th { background: #2a2a2a; color: var(--gold); }
+        
+        .winner-highlight { background: rgba(0, 255, 212, 0.12) !important; }
+        .winner-highlight td:nth-child(2), .winner-highlight td:first-child { color: var(--final-green); font-weight: bold; }
+
+        /* Akkordeon */
+        .acc-row { background: var(--card-bg); margin-bottom: 8px; border-radius: 8px; border: 1px solid #333; overflow: hidden; }
+        .acc-header { display: flex; justify-content: space-between; padding: 15px; cursor: pointer; align-items: center; font-weight: bold; color: var(--gold); }
+        .acc-body { display: none; padding: 10px; background: #181818; border-top: 1px solid #333; }
+        
+        .kill-total { background: var(--final-green); color: black; padding: 2px 12px; border-radius: 12px; font-size: 0.8rem; }
+        .victim-line { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #444; font-size: 0.85rem; color: #ccc; }
+
+        /* Navigation */
+        .nav-section { margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .secondary-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold); }
+        #archiv-content, #docs-content { margin-top: 30px; border-top: 2px solid var(--gold); padding-top: 20px; }
+        .info-text { font-size: 0.7rem; text-align: left; color: #aaa; margin: 10px; line-height: 1.3; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <h1>POKERMADNESS</h1>
+    <input type="password" id="passInput" placeholder="Passwort...">
+    <button onclick="checkLogin()">Einloggen</button>
+</div>
+
+<div id="main-content" class="hidden">
+    <header><h1>POKERMADNESS</h1></header>
+
+    <div class="container">
+        <h2>RANGLISTE</h2>
+        <div class="table-container">
+            <table style="min-width: 100%;">
+                <thead><tr><th>Platz</th><th>Spieler</th><th>Pkt</th><th>Teilnahmen</th></tr></thead>
+                <tbody id="playerList"></tbody>
+            </table>
+        </div>
+
+        <h2 id="kill-section-title">KILL-LISTE</h2>
+        <div id="killAccordion"></div>
+
+        <div class="nav-section">
+            <button class="secondary-btn" onclick="toggleSection('docs-content')">Unterlagen</button>
+            <button class="secondary-btn" onclick="toggleSection('archiv-content')">Archiv</button>
+        </div>
+
+        <div id="docs-content" class="hidden">
+            <h2>UNTERLAGEN</h2>
+            
+            <div class="acc-row">
+                <div class="acc-header" onclick="toggleAcc('acc-punkte')">PUNKTEVERTEILUNG</div>
+                <div id="acc-punkte" class="acc-body">
+                    <div class="table-container scroll-table">
+                        <table id="punkteTable">
+                            <thead><tr><th>Platz</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acc-row">
+                <div class="acc-header" onclick="toggleAcc('acc-geld')">AUSZAHLUNG</div>
+                <div id="acc-geld" class="acc-body">
+                    <div class="table-container scroll-table">
+                        <table id="geldTable">
+                            <thead><tr><th>Platz</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="info-text">Buyin: 50 | Rebuy: 30<br>Rebuy Verteilung: Top 2: 15/15 | Top 3: 10/10/10 | Top 4: 10/10/5/5</div>
+                </div>
+            </div>
+
+            <div class="acc-row">
+                <div class="acc-header" onclick="toggleAcc('acc-blind')">BLIND-LEVEL</div>
+                <div id="acc-blind" class="acc-body">
+                    <div class="table-container">
+                        <table style="min-width: 100%;">
+                            <thead><tr><th>Level</th><th>Blinds</th><th>Ante</th><th>Minuten</th></tr></thead>
+                            <tbody id="blindTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="archiv-content" class="hidden">
+            <h2>FINALE ARCHIV</h2>
+            <div id="archiv-listen"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const players = ["Andi", "Ben", "Bene", "Berenger", "Boran", "Chris", "Dawod", "Dennis", "Gabriel", "Markus E.", "Matze", "Michel", "Puje", "Ralf", "Rocco", "Samed", "Valerie"].sort();
+
+    const archivDaten = [
+        { jahr: 2025, plätze: ["Samed", "Rocco", "Michel", "Gabriel", "Dennis"] },
+        { jahr: 2024, plätze: ["Michel", "Chris", "Rocco", "Puje", "Alex K."] },
+        { jahr: 2023, plätze: ["Rocco", "Michel", "Alex K.", "Chris", "Samed"] },
+        { jahr: 2022, plätze: ["Dawod", "Samed", "Chris", "Alex A.", "Magnus"] },
+        { jahr: 2021, plätze: ["Markus", "Magnus", "Samed", "Chris", "Dawod"] },
+        { jahr: 2020, plätze: ["Markus", "Samed", "Michel", "Magnus", "Dawod"] },
+        { jahr: 2019, plätze: ["Markus", "Chris", "Samed", "Dawod", "Alex K."] },
+        { jahr: 2018, plätze: ["Dawod", "Markus", "Michel", "Chris", "Samed"] },
+        { jahr: 2017, plätze: ["Markus", "Alex A.", "Dawod", "Samed", "Alex K."] },
+        { jahr: 2016, plätze: ["Chris", "Samed", "Dawod", "Alex K.", "Markus"] },
+        { jahr: 2015, plätze: ["Chris", "Alex K.", "Dawod", "Samed", "Markus"] },
+        { jahr: 2014, plätze: ["Dawod", "Markus", "Hakan", "Samed", "Alex K."] }
+    ];
+
+    function checkLogin() {
+        if(document.getElementById('passInput').value === "legendhand") {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            initApp();
+        } else alert("Falsch!");
+    }
+
+    function initApp() {
+        const rBody = document.getElementById('playerList');
+        players.forEach((p, i) => rBody.innerHTML += `<tr class="${i<5?'winner-highlight':''}"><td>${i+1}</td><td style="text-align:left;padding-left:20px;">${p}</td><td>0</td><td>0</td></tr>`);
+        
+        const kAcc = document.getElementById('killAccordion');
+        players.forEach((k, i) => {
+            let vHtml = "";
+            players.forEach(v => { if(k!==v) vHtml += `<div class="victim-line"><span>${v}</span><span>0</span></div>`; });
+            kAcc.innerHTML += `<div class="acc-row"><div class="acc-header" onclick="toggleAcc('k-${i}')"><span>${k}</span><span class="kill-total">0 Kills</span></div><div id="k-${i}" class="acc-body">${vHtml}</div></div>`;
+        });
+
+        const pT = document.querySelector('#punkteTable tbody');
+        // Punkte Daten: Index 0 ist Platznummer, Rest sind Spalten für 5 bis 18 Spieler
+        const pD = [
+            [1,8,9,10,11,12,13,14,15,16,17,18,19,20,21], [2,5,6,7,8,9,10,11,12,13,14,15,16,17,18], [3,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            [4,1,2,3,4,5,6,7,8,9,10,11,12,13,14], [5,0,1,2,3,4,5,6,7,8,9,10,11,12,13], [6,"",0,1,2,3,4,5,6,7,8,9,10,11,12],
+            [7,"","",0,1,2,3,4,5,6,7,8,9,10,11], [8,"","","",0,1,2,3,4,5,6,7,8,9,10], [9,"","","","",0,1,2,3,4,5,6,7,8,9],
+            [10,"","","","","",0,1,2,3,4,5,6,7,8], [11,"","","","","","",0,1,2,3,4,5,6,7], [12,"","","","","","","",0,1,2,3,4,5,6],
+            [13,"","","","","","","","",0,1,2,3,4,5], [14,"","","","","","","","","",0,1,2,3,4], [15,"","","","","","","","","","",0,1,2,3],
+            [16,"","","","","","","","","","","",0,1,2], [17,"","","","","","","","","","","","",0,1], [18,"","","","","","","","","","","","","",0]
+        ];
+        pD.forEach(r => pT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
+
+        const gT = document.querySelector('#geldTable tbody');
+        const gD = [
+            [1,150,150,170,200,220,250,250,260,270,280,290,300,310,320], 
+            [2,100,100,115,125,140,150,150,160,170,180,190,200,210,220],
+            [3,"",50,65,75,90,100,100,115,130,145,160,175,190,205], 
+            [4,"","","","","","",50,65,80,95,110,125,140,155]
+        ];
+        gD.forEach(r => gT.innerHTML += `<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`);
+
+        const bT = document.getElementById('blindTable');
+        const bD = [
+            [1,"25/50","X",20], [2,"50/100","X",20], [3,"75/150","X",20], [4,"100/200","X",20],
+            [5,"150/300","X",20], [6,"200/400","X",20], [7,"250/500","✓",20], [8,"300/600","✓",20],
+            [9,"400/800","✓",20], ["-","Rebuy Ende","-","-"], [10,"500/1000","✓",20], [11,"600/1200","✓",20],
+            [12,"800/1600","✓",20], [13,"1000/2000","✓",20], [14,"1500/3000","✓",20], [15,"2000/4000","✓",20],
+            [16,"2500/5000","✓",20], [17,"3000/6000","✓",20], [18,"3500/7000","✓",20], [19,"4000/8000","✓",20]
+        ];
+        bD.forEach(r => bT.innerHTML += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`);
+    }
+
+    function toggleAcc(id) {
+        const el = document.getElementById(id);
+        const isOpen = el.style.display === "block";
+        document.querySelectorAll('.acc-body').forEach(b => b.style.display = "none");
+        el.style.display = isOpen ? "none" : "block";
+    }
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        const isHidden = el.classList.contains('hidden');
+        document.getElementById('docs-content').classList.add('hidden');
+        document.getElementById('archiv-content').classList.add('hidden');
+        if(isHidden) {
+            el.classList.remove('hidden');
+            if(id==='archiv-content') renderArchiv();
+            el.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function renderArchiv() {
+        const div = document.getElementById('archiv-listen');
+        div.innerHTML = "";
+        archivDaten.forEach(e => {
+            div.innerHTML += `<div style="margin-bottom:25px;"><h3>FINALE ${e.jahr}</h3><div class="table-container"><table><tbody>${e.plätze.map((p, i) => `<tr class="${i===0?'winner-highlight':''}"><td>${i+1}.</td><td style="text-align:left;padding-left:20px;">${p}</td></tr>`).join('')}</tbody></table></div></div>`;
+        });
+    }
+</script>
+</body>
+</html>
