@@ -169,7 +169,7 @@
             if (i === 0 || d.p !== data[i-1].p || d.t !== data[i-1].t) {
                 currentRank = i + 1;
             }
-            const style = currentRank <= 5 ? 'class="winner-highlight"' : '';
+            const style = currentRank <= 6 ? 'class="winner-highlight"' : '';
             dest.innerHTML += `<tr ${style}><td>${currentRank}.</td><td>${d.n}</td><td>${d.p}</td><td>${d.t}</td></tr>`;
         });
     }
