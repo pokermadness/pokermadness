@@ -174,18 +174,26 @@
         });
     }
 
-    function renderKillsCSV(csv) {
+   function renderKillsCSV(csv) {
         const lines = csv.split('\n').map(line => line.split(','));
         if(lines.length < 1) return;
+        
         const victims = lines[0].map(v => v.replace(/"/g,'').trim());
         const dest = document.getElementById('killAccordion');
         dest.innerHTML = "";
 
+        // Hier speichern wir die Daten erst einmal zwischen, um sie zu sortieren
+        let killArray = [];
+
         for(let i = 1; i < lines.length; i++) {
             const row = lines[i];
             const killer = row[0] ? row[0].replace(/"/g,'').trim() : "";
+            
             if(!killer || killer.toLowerCase() === "spieler" || killer.toLowerCase() === "kill/opfer") continue;
-            let details = ""; let sum = 0;
+            
+            let details = ""; 
+            let sum = 0;
+            
             for(let j = 1; j < row.length; j++) {
                 const val = parseInt(row[j]) || 0;
                 if(val > 0 && victims[j]) {
@@ -193,10 +201,32 @@
                     sum += val;
                 }
             }
+            
+            // Nur hinzufügen, wenn der Spieler überhaupt Kills hat
             if(sum > 0) {
-                dest.innerHTML += `<div class="acc-row"><div class="acc-header" onclick="toggleAcc('k-${i}')"><span>${killer}</span><span class="kill-total">${sum} Kills</span></div><div id="k-${i}" class="acc-body">${details}</div></div>`;
+                killArray.push({
+                    name: killer,
+                    total: sum,
+                    content: details,
+                    originalIndex: i
+                });
             }
         }
+
+        // JETZT WIRD SORTIERT: Meiste Kills (b.total) nach oben
+        killArray.sort((a, b) => b.total - a.total);
+
+        // Jetzt bauen wir die Liste in der neuen Reihenfolge zusammen
+        killArray.forEach(item => {
+            dest.innerHTML += `
+                <div class="acc-row">
+                    <div class="acc-header" onclick="toggleAcc('k-${item.originalIndex}')">
+                        <span>${item.name}</span>
+                        <span class="kill-total">${item.total} Kills</span>
+                    </div>
+                    <div id="k-${item.originalIndex}" class="acc-body">${item.content}</div>
+                </div>`;
+        });
     }
 
     function initStaticData() {
