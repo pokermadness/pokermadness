@@ -115,6 +115,7 @@ details.acc[open] summary .ic{transform:rotate(180deg)}
 .det .cv{margin-top:6px}
 .cv svg{width:100%;height:auto;display:block;margin-top:8px}
 .lo{display:inline-flex;align-items:center;gap:8px;background:var(--gl);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--gb);border-radius:20px;color:var(--mut);padding:11px 18px;font-size:.8rem;cursor:pointer;margin-top:22px}
+#dbg{margin-top:18px;padding:10px 12px;border-radius:12px;background:var(--gl);border:1px solid var(--gb);color:var(--mut);font-size:.72rem;line-height:1.5;text-align:left}
 .note{color:var(--mut);font-size:.85rem;padding:20px 10px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -174,6 +175,7 @@ details.acc[open] summary .ic{transform:rotate(180deg)}
       <h2><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Blind-Level</h2>
       <details class="acc"><summary>Blind-Level anzeigen<svg class="ic" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></summary><div class="tc" style="margin:0;border:0;border-radius:0;box-shadow:none;background:transparent"><table id="blind"></table></div></details>
     </section>
+    <div id="dbg" class="hidden"></div>
     <div style="text-align:center"><button class="lo" onclick="logout()"><svg class="ic" viewBox="0 0 24 24"><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9M15 8l4 4-4 4M19 12H9"/></svg>Abmelden</button></div>
   </div>
 </div>
@@ -185,13 +187,17 @@ const URL_RANK=BASE+"156592382";
 const URL_KILLS=BASE+"0";
 // Tabellenblatt mit "Runde 1 / Platz / Runde 2 / Platz ..." -> hier die gid eintragen (Blatt veroeffentlichen als CSV)
 const GID_RUNDEN="156592382";
-const MAX_RUNDEN=12;
+const MAX_RUNDEN=20;
 // Tab "Eingabe" als CSV veroeffentlichen und hier die gid eintragen (Kills pro Spieltag)
 const GID_EINGABE="";
-// Kills pro Spieltag (aus der Spalte "Spieltag" der Kill-Liste, Spieltage 1 bis 10): Spieltag -> Killer -> Opfer -> Anzahl.
-// Wird benutzt, solange das Sheet die Kills pro Spieltag nicht selbst liefert.
-// Kills, die hier noch fehlen (neuer Abend), zaehlen automatisch zum neuesten Spieltag.
-const STATIC_KV={"1":{"Ben":{"Markus E.":1},"Michel":{"Ralf":1,"Berenger":1,"Andy":1},"Dawod":{"Gabriel":1},"Matze":{"Samed":1,"Berenger":1,"Valerie":1,"Dennis":1},"Chris":{"Matze":1,"Rocco":1,"Andy":1,"Markus E.":1},"Puje":{"Gabriel":2,"Valerie":2,"Ralf":1,"Dawod":1,"Chris":1,"Michel":1},"Markus E.":{"Rocco":1,"Samed":1},"Rocco":{"Dennis":1},"Andy":{"Dawod":1,"Samed":1,"Ben":1},"Dennis":{"Rocco":1},"Valerie":{"Matze":1}},"2":{"Ralf":{"Matze":1},"Markus E.":{"Samed":1},"Matze":{"Gabriel":2,"Michel":1,"Dennis":1},"Samed":{"Andy":2,"Michel":2,"Rocco":1,"Markus E.":1,"Matze":1,"Ben":1},"Ben":{"Rocco":1,"Chris":1},"Chris":{"Rocco":1},"Boran":{"Gabriel":1,"Ralf":1,"Samed":1}},"3":{"Michel":{"Chris":1,"Boran":1,"Valerie":1},"Dawod":{"Chris":1,"Valerie":2,"Andy":1,"Ben":1,"Boran":1},"Andy":{"Puje":1,"Matze":1,"Michel":1},"Chris":{"Berenger":1},"Dennis":{"Matze":1},"Boran":{"Gabriel":1,"Dennis":1},"Puje":{"Matze":1,"Samed":1},"Rocco":{"Puje":2,"Berenger":1,"Dawod":1},"Valerie":{"Chris":1,"Rocco":1},"Gabriel":{"Michel":1}},"4":{"Chris":{"Samed":2,"Gabriel":1,"Boran":1},"Ralf":{"Matze":2,"Gabriel":1,"Puje":1,"Ben":1},"Andy":{"Matze":1,"Boran":2},"Ben":{"Gabriel":1},"Puje":{"Dennis":1,"Samed":1},"Samed":{"Andy":1,"Chris":1,"Ralf":1}},"5":{"Valerie":{"Matze":1,"Michel":1},"Puje":{"Boran":1},"Dennis":{"Rocco":1,"Gabriel":1},"Gabriel":{"Markus E.":1,"Michel":1},"Matze":{"Ben":1},"Andy":{"Markus E.":1,"Dawod":1,"Chris":1},"Boran":{"Ben":1,"Matze":1,"Dawod":1},"Michel":{"Gabriel":1,"Valerie":1},"Rocco":{"Matze":1,"Valerie":1,"Ben":1,"Dennis":1,"Markus E.":1,"Boran":1,"Gabriel":1,"Andy":1,"Puje":1}},"6":{"Matze":{"Ben":1,"Andy":1,"Dawod":1,"Gabriel":1,"Ralf":1,"Boran":1},"Gabriel":{"Michel":1},"Rocco":{"Valerie":1,"Samed":1,"Chris":1},"Boran":{"Samed":1},"Andy":{"Samed":1,"Chris":1,"Gabriel":2,"Puje":1,"Markus E.":1,"Dennis":1},"Puje":{"Chris":1,"Michel":1,"Ben":1},"Markus E.":{"Valerie":1},"Dennis":{"Valerie":1,"Rocco":1,"Matze":1}},"7":{"Rocco":{"Matze":1,"Gabriel":1,"Chris":1,"Ralf":1,"Dennis":1},"Ralf":{"Chris":1},"Matze":{"Rocco":1},"Gabriel":{"Matze":2,"Markus E.":1,"Boran":1,"Rocco":1,"Chris":1},"Markus E.":{"Andy":1}},"8":{"Samed":{"Puje":1,"Chris":2,"Ralf":1,"Dennis":1},"Chris":{"Dennis":1},"Dennis":{"Chris":1,"Dawod":2,"Rocco":1,"Puje":1,"Boran":1},"Boran":{"Rocco":1},"Puje":{"Andy":1},"Dawod":{"Andy":1},"Rocco":{"Puje":1,"Samed":1}},"9":{"Boran":{"Andy":1,"Ben":1},"Chris":{"Samed":1},"Matze":{"Gabriel":1,"Dennis":1,"Ben":1,"Samed":1},"Andy":{"Valerie":1},"Rocco":{"Samed":1,"Boran":1,"Andy":1,"Valerie":1,"Matze":1},"Samed":{"Dennis":1,"Matze":2,"Gabriel":2,"Chris":1}},"10":{"Chris":{"Matze":1},"Gabriel":{"Matze":1,"Boran":1,"Dennis":1},"Samed":{"Dennis":1,"Dawod":1,"Valerie":1,"Chris":1,"Andy":1},"Andy":{"Valerie":2,"Chris":1,"Matze":1,"Gabriel":1},"Boran":{"Chris":1,"Dawod":1}}};
+// Kill-Liste (Tab "Eingabe") wird live aus dem Sheet gelesen (Sheet muss "Jeder mit dem Link: Betrachter" sein).
+const SHEET_ID="1R-Bay1oqP5czVSJUeewRjrskC45H3k6ojuvlzo7wetw";
+const EINGABE_TAB="Eingabe";
+// Reserve: Kills pro Spieltag der Saison 2026 (Spieltage 1 bis 12): Spieltag -> Killer -> Opfer -> Anzahl.
+// Wird nur benutzt, wenn die Kill-Liste nicht live aus dem Sheet gelesen werden kann UND zur Kill-Matrix passt.
+// Fuer eine neue Saison passt sie nicht mehr und wird automatisch ignoriert.
+const STATIC_SIG="Andy:10,Ben:6,Berenger:1,Chris:13,Dawod:4,Dennis:8,Gabriel:2,Markus E.:7,Matze:9,Michel:15,Puje:18,Ralf:3,Rocco:5,Samed:0,Valerie:11";
+const STATIC_KV={"1":{"Ben":{"Markus E.":1},"Michel":{"Ralf":1,"Berenger":1,"Andy":1},"Dawod":{"Gabriel":1},"Matze":{"Samed":1,"Berenger":1,"Valerie":1,"Dennis":1},"Chris":{"Matze":1,"Rocco":1,"Andy":1,"Markus E.":1},"Puje":{"Gabriel":2,"Valerie":2,"Ralf":1,"Dawod":1,"Chris":1,"Michel":1},"Markus E.":{"Rocco":1,"Samed":1},"Rocco":{"Dennis":1},"Andy":{"Dawod":1,"Samed":1,"Ben":1},"Dennis":{"Rocco":1},"Valerie":{"Matze":1}},"2":{"Ralf":{"Matze":1},"Markus E.":{"Samed":1},"Matze":{"Gabriel":2,"Michel":1,"Dennis":1},"Samed":{"Andy":2,"Michel":2,"Rocco":1,"Markus E.":1,"Matze":1,"Ben":1},"Ben":{"Rocco":1,"Chris":1},"Chris":{"Rocco":1},"Boran":{"Gabriel":1,"Ralf":1,"Samed":1}},"3":{"Michel":{"Chris":1,"Boran":1,"Valerie":1},"Dawod":{"Chris":1,"Valerie":2,"Andy":1,"Ben":1,"Boran":1},"Andy":{"Puje":1,"Matze":1,"Michel":1},"Chris":{"Berenger":1},"Dennis":{"Matze":1},"Boran":{"Gabriel":1,"Dennis":1},"Puje":{"Matze":1,"Samed":1},"Rocco":{"Puje":2,"Berenger":1,"Dawod":1},"Valerie":{"Chris":1,"Rocco":1},"Gabriel":{"Michel":1}},"4":{"Chris":{"Samed":2,"Gabriel":1,"Boran":1},"Ralf":{"Matze":2,"Gabriel":1,"Puje":1,"Ben":1},"Andy":{"Matze":1,"Boran":2},"Ben":{"Gabriel":1},"Puje":{"Dennis":1,"Samed":1},"Samed":{"Andy":1,"Chris":1,"Ralf":1}},"5":{"Valerie":{"Matze":1,"Michel":1},"Puje":{"Boran":1},"Dennis":{"Rocco":1,"Gabriel":1},"Gabriel":{"Markus E.":1,"Michel":1},"Matze":{"Ben":1},"Andy":{"Markus E.":1,"Dawod":1,"Chris":1},"Boran":{"Ben":1,"Matze":1,"Dawod":1},"Michel":{"Gabriel":1,"Valerie":1},"Rocco":{"Matze":1,"Valerie":1,"Ben":1,"Dennis":1,"Markus E.":1,"Boran":1,"Gabriel":1,"Andy":1,"Puje":1}},"6":{"Matze":{"Ben":1,"Andy":1,"Dawod":1,"Gabriel":1,"Ralf":1,"Boran":1},"Gabriel":{"Michel":1},"Rocco":{"Valerie":1,"Samed":1,"Chris":1},"Boran":{"Samed":1},"Andy":{"Samed":1,"Chris":1,"Gabriel":2,"Puje":1,"Markus E.":1,"Dennis":1},"Puje":{"Chris":1,"Michel":1,"Ben":1},"Markus E.":{"Valerie":1},"Dennis":{"Valerie":1,"Rocco":1,"Matze":1}},"7":{"Rocco":{"Matze":1,"Gabriel":1,"Chris":1,"Ralf":1,"Dennis":1},"Ralf":{"Chris":1},"Matze":{"Rocco":1},"Gabriel":{"Matze":2,"Markus E.":1,"Boran":1,"Rocco":1,"Chris":1},"Markus E.":{"Andy":1}},"8":{"Samed":{"Puje":1,"Chris":2,"Ralf":1,"Dennis":1},"Chris":{"Dennis":1},"Dennis":{"Chris":1,"Dawod":2,"Rocco":1,"Puje":1,"Boran":1},"Boran":{"Rocco":1},"Puje":{"Andy":1},"Dawod":{"Andy":1},"Rocco":{"Puje":1,"Samed":1}},"9":{"Boran":{"Andy":1,"Ben":1},"Chris":{"Samed":1},"Matze":{"Gabriel":1,"Dennis":1,"Ben":1,"Samed":1},"Andy":{"Valerie":1},"Rocco":{"Samed":1,"Boran":1,"Andy":1,"Valerie":1,"Matze":1},"Samed":{"Dennis":1,"Matze":2,"Gabriel":2,"Chris":1}},"10":{"Chris":{"Matze":1},"Gabriel":{"Matze":1,"Boran":1,"Dennis":1},"Samed":{"Dennis":1,"Dawod":1,"Valerie":1,"Chris":1,"Andy":1},"Andy":{"Valerie":2,"Chris":1,"Matze":1,"Gabriel":1},"Boran":{"Chris":1,"Dawod":1}},"11":{"Chris":{"Matze":1,"Valerie":1,"Ralf":1,"Gabriel":1},"Samed":{"Valerie":2,"Rocco":1,"Michel":1},"Ralf":{"Matze":1},"Matze":{"Dennis":1},"Dennis":{"Ben":1},"Ben":{"Matze":1,"Dennis":1},"Rocco":{"Chris":1,"Samed":1,"Ben":1}},"12":{"Markus E.":{"Andy":1},"Matze":{"Rocco":2,"Andy":1,"Markus E.":1,"Ben":1,"Michel":1,"Dennis":1},"Chris":{"Samed":1},"Puje":{"Rocco":1,"Dennis":1,"Markus E.":1},"Rocco":{"Matze":1},"Samed":{"Matze":1},"Ben":{"Markus E.":1},"Andy":{"Puje":1},"Dennis":{"Andy":1},"Gabriel":{"Matze":1,"Samed":1,"Chris":1}}};
 const LOGIN_VERSION="1";
 const STAY_DAYS=90;
 
@@ -248,20 +254,23 @@ function rankify(a){
 
 const pairTot=kv=>{const t={};Object.values(kv).forEach(d=>Object.entries(d).forEach(([k,m])=>Object.entries(m).forEach(([v,c])=>{(t[k]=t[k]||{})[v]=(t[k][v]||0)+c})));return t};
 const ksOf=kv=>{const o={};Object.entries(kv).forEach(([d,m])=>{o[d]={};Object.entries(m).forEach(([k,x])=>o[d][k]=sum(x))});return o};
-function apply(rk,kl,hs,ei){
-  S.kills={};S.deaths={};S.H=null;S.KS=null;S.KV=null;
+function apply(rk,kl,hs,eis,names){
+  S.kills={};S.deaths={};S.H=null;S.KS=null;S.KV=null;S.src="";S.eCount=null;
   if(kl)kills(kl);
   let N=0;
-  try{const h0=hs?hist(hs):null;N=h0?h0.N:0}catch(e){}
+  let h0=null;try{h0=hs?hist(hs):null;N=h0?h0.N:0}catch(e){}
   const set=kv=>{S.KV=kv;S.KS=ksOf(kv)};
-  // 1) Kills pro Spieltag aus dem Sheet (nur wenn jedes Paar Killer/Opfer zur Kill-Matrix passt)
-  if(ei)try{
+  // 1) Kills pro Spieltag aus dem Sheet: erste Quelle, bei der jedes Paar Killer/Opfer zur Kill-Matrix passt
+  for(const [ii,ei] of (eis||[]).entries())try{
+    if(!ei)continue;
     const pd=perDay(ei),t=pairTot(pd);let ok=Object.keys(pd).length>0;
+    if(names&&names[ii]==="Eingabe live")S.eCount=Object.values(t).reduce((a,m)=>a+sum(m),0);
     new Set([...Object.keys(t),...Object.keys(S.kills)]).forEach(k=>new Set([...Object.keys(t[k]||{}),...Object.keys(S.kills[k]||{})]).forEach(v=>{if(((t[k]||{})[v]||0)!==((S.kills[k]||{})[v]||0))ok=false}));
-    if(ok)set(pd);
+    if(ok){set(pd);S.src=(names&&names[ii])||"Sheet";break}
   }catch(e){}
   // 2) sonst: eingebaute Liste; fehlende Kills zaehlen zum neuesten Spieltag
-  if(!S.KV&&N>0)try{
+  const sig=h0?h0.at(1).filter(d=>d.g!==null).map(d=>d.n+":"+d.g).sort().join(","):"";
+  if(!S.KV&&N>0&&sig===STATIC_SIG)try{
     const st=JSON.parse(JSON.stringify(STATIC_KV));Object.keys(st).forEach(d=>{if(+d>N)delete st[d]});
     const t=pairTot(st);let ok=true;const rest={};
     new Set([...Object.keys(t),...Object.keys(S.kills)]).forEach(k=>new Set([...Object.keys(t[k]||{}),...Object.keys(S.kills[k]||{})]).forEach(v=>{
@@ -269,7 +278,7 @@ function apply(rk,kl,hs,ei){
       if(r<0)ok=false;else if(r>0){(rest[k]=rest[k]||{})[v]=r}}));
     if(ok){
       if(Object.keys(rest).length){const day=(st[N]=st[N]||{});Object.entries(rest).forEach(([k,m])=>Object.entries(m).forEach(([v,c])=>{(day[k]=day[k]||{})[v]=(day[k][v]||0)+c}))}
-      set(st);
+      set(st);S.src="eingebaut (Saison 2026)";
     }
   }catch(e){}
   if(hs)try{S.H=hist(hs)}catch(e){}
@@ -284,20 +293,40 @@ function apply(rk,kl,hs,ei){
   });
   S.rank=rankify(d);
   renderAll();
+  dbgInfo();
+}
+function dbgInfo(){
+  if(!/[?&]info\b/.test(location.search))return;
+  const el=$("dbg");el.classList.remove("hidden");
+  const mc=Object.values(S.kills).reduce((a,m)=>a+sum(m),0);
+  el.textContent="Info · Kills pro Spieltag: "+(S.src||"nicht verfügbar")+" · Spieltage mit Daten: "+(S.H?S.H.N:0)+" · Tage mit Kills: "+(S.KV?Object.keys(S.KV).length:0)+" · Kills (Matrix): "+mc+" · Kills (Eingabe live): "+(S.eCount==null?"nicht erreichbar":S.eCount);
+}
+// Kill-Liste live aus dem Sheet (ohne Veroeffentlichen). Klappt es nicht, wird still die Reserve benutzt.
+function fetchEingabe(){
+  const u=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(EINGABE_TAB)}&t=${Date.now()}`;
+  const ac=typeof AbortController!=="undefined"?new AbortController():null;
+  const tm=setTimeout(()=>{if(ac)ac.abort()},9000);
+  return fetch(u,ac?{signal:ac.signal}:undefined).then(r=>r.ok?r.text():null).then(t=>{clearTimeout(tm);return t&&t.length>20&&!/<html/i.test(t.slice(0,300))?csv(t):null}).catch(()=>null);
 }
 async function load(){
+  const gv=fetchEingabe();
   const [a,b]=await Promise.allSettled([get(URL_RANK),get(URL_KILLS)]);
   if(a.status!=="fulfilled"){
     $("rank").innerHTML='<tr><td colspan="6">Daten konnten nicht geladen werden.<br><button class="chip" style="margin-top:10px;padding:9px 14px" onclick="demo()">Demo-Ansicht (Testdaten)</button></td></tr>';
     $("kl").textContent="Daten konnten nicht geladen werden.";
     return;
   }
-  let h=null;
-  if(GID_RUNDEN)try{h=await get(BASE+GID_RUNDEN)}catch(e){}
-  let ei=null;
-  if(GID_EINGABE)try{ei=await get(BASE+GID_EINGABE)}catch(e){}
-  if(!ei)ei=embedded(a.value);
-  apply(a.value,b.status==="fulfilled"?b.value:null,h,ei);
+  const km=b.status==="fulfilled"?b.value:null;
+  let h=a.value;
+  if(GID_RUNDEN&&BASE+GID_RUNDEN!==URL_RANK)try{h=await get(BASE+GID_RUNDEN)}catch(e){h=null}
+  let pub=null;
+  if(GID_EINGABE)try{pub=await get(BASE+GID_EINGABE)}catch(e){}
+  const base=[embedded(a.value),pub],baseN=["Rangliste-Block","Eingabe veröffentlicht"];
+  // kurz auf die Live-Kill-Liste warten, danach (falls sie spaeter kommt) noch einmal neu berechnen
+  const first=await Promise.race([gv,new Promise(r=>setTimeout(()=>r("late"),2500))]);
+  const live=first&&first!=="late";
+  apply(a.value,km,h,live?[first,...base]:base,live?["Eingabe live",...baseN]:baseN);
+  if(first==="late"){const g=await gv;if(g)apply(a.value,km,h,[g,...base],["Eingabe live",...baseN])}
 }
 function demo(){
   const R="Spieler,Punkte,Teilnahmen,Runde 1,Platz,Runde 2,Platz,Runde 3,Platz\n,,,8,8,8,8,8,8\nAndy,26,3,13,2,5,8,8,1\nBen,21,3,9,5,12,3,0,0\nChris,24,3,10,4,6,6,8,2\nDawod,13,2,0,0,13,2,0,0\nRocco,31,3,14,1,8,5,9,4\nSamed,18,3,6,7,7,7,5,6\nMatze,0,0,,,,,,";
@@ -305,7 +334,7 @@ function demo(){
   S.demo=true;cur=0;
   const km=csv(K),ei=[];let di=0;
   km.slice(1).forEach(r=>{for(let j=1;j<r.length;j++){const n=parseInt(r[j])||0;for(let c=0;c<n;c++)ei.push([r[0],km[0][j],String(1+(di++%3))])}});
-  apply(csv(R),km,csv(R),ei);
+  apply(csv(R),km,csv(R),[ei],["Demo"]);
 }
 
 // Alternative ohne Veroeffentlichen: Block "Spieler | Kills | Spieltag" liegt rechts in der Rangliste
@@ -472,6 +501,8 @@ function route(){show((location.hash||"#tabelle").slice(1))}
 window.addEventListener("hashchange",route);
 
 // ===== Statische Daten =====
+// FINALE-ARCHIV: Jedes Jahr nach dem Finale OBEN eine Zeile ergaenzen, Plaetze 1 bis 5 (exakt so geschrieben wie die Namen in der Rangliste), zum Beispiel:
+// {j:2026,p:["Platz 1","Platz 2","Platz 3","Platz 4","Platz 5"]},
 const ARCH=[{j:2025,p:["Samed","Rocco","Michel","Gabriel","Dennis"]},{j:2024,p:["Michel","Chris","Rocco","Puje","Alex K."]},{j:2023,p:["Rocco","Michel","Alex K.","Chris","Samed"]},{j:2022,p:["Dawod","Samed","Chris","Alex A.","Magnus"]},{j:2021,p:["Markus","Magnus","Samed","Chris","Dawod"]},{j:2020,p:["Markus","Samed","Michel","Magnus","Dawod"]},{j:2019,p:["Markus","Chris","Samed","Dawod","Alex K."]},{j:2018,p:["Dawod","Markus","Michel","Chris","Samed"]},{j:2017,p:["Markus","Alex A.","Dawod","Samed","Alex K."]},{j:2016,p:["Chris","Samed","Dawod","Alex K.","Markus"]},{j:2015,p:["Chris","Alex K.","Dawod","Samed","Markus"]},{j:2014,p:["Dawod","Markus","Hakan","Samed","Alex K."]}];
 let PR=[],PY=[],RN=10;
 function setN(n){RN=n;renderRules()}
